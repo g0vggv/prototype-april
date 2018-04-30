@@ -357,6 +357,7 @@ const addCardToBox =
       ${graphQLObjectFieldsFragment}
     `;
     const variables = { cardObject, box };
+    // FIXME should also updateBoxes to update `contains`
     return client.request(query, variables)
       .then(({ updateObject }) => dispatch(updateObjects(toIDMap<ObjectData>([
         toObjectData(updateObject),

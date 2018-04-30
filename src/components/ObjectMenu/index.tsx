@@ -9,6 +9,7 @@ import * as OE from '../../types/object-editor';
 
 interface StateFromProps {
   selection: SL.State;
+  objects: SO.State['objects'];
 }
 
 interface DispatchFromProps {
@@ -20,7 +21,47 @@ interface DispatchFromProps {
 
 type Props = StateFromProps & DispatchFromProps;
 
+function selectedCardsAndBoxes(props: Props): { cards: SO.ObjectID[], boxes: SO.ObjectID[] } {
+  let cards: SO.ObjectID[] = [];
+  let boxes: SO.ObjectID[] = [];
+  props.selection.forEach(id => {
+    switch (props.objects[id].objectType) {
+      case SO.ObjectType.CARD: {
+        cards = [...cards, id];
+        break;
+      }
+      case SO.ObjectType.BOX: {
+        boxes = [...boxes, id];
+        break;
+      }
+      default: {
+        // noop
+      }
+    }
+  });
+  return { cards, boxes };
+}
+
 class ObjectMenu extends React.Component<Props> {
+  constructor(props: Props) {
+    super(props);
+    this.canAddCard = this.canAddCard.bind(this);
+    this.handleAddCard = this.handleAddCard.bind(this);
+  }
+
+  canAddCard(): Boolean {
+    const { cards, boxes } = selectedCardsAndBoxes(this.props);
+    return cards.length === 1 && boxes.length === 1;
+  }
+
+  handleAddCard() {
+    const { cards, boxes } = selectedCardsAndBoxes(this.props);
+    if (this.canAddCard()) {
+      return this.props.actions.addCardToBox(cards[0], this.props.objects[boxes[0]].data);
+    }
+    return;
+  }
+
   render() {
     const { actions, selection } = this.props;
 
@@ -38,13 +79,23 @@ class ObjectMenu extends React.Component<Props> {
         >
           編輯
         </Menu.Item>
+        <Menu.Item
+          name="addCard"
+          disabled={!this.canAddCard()}
+          onClick={this.handleAddCard}
+        >
+          加入
+        </Menu.Item>
       </Menu>
     );
   }
 }
 
 export default connect<StateFromProps, DispatchFromProps>(
-  (state: T.State) => ({ selection: state.selection }),
+  (state: T.State) => ({
+    selection: state.selection,
+    objects: state.senseObject.objects,
+  }),
   (dispatch: T.Dispatch) => ({
     actions: {
       selectObject: (id: SO.ObjectID | null) => dispatch(T.actions.editor.selectObject(id)),

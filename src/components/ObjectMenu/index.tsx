@@ -4,6 +4,7 @@ import { Menu } from 'semantic-ui-react';
 import * as T from '../../types';
 import * as SL from '../../types/selection';
 import * as SO from '../../types/sense-object';
+import * as SB from '../../types/sense-box';
 import * as OE from '../../types/object-editor';
 
 interface StateFromProps {
@@ -12,13 +13,14 @@ interface StateFromProps {
 
 interface DispatchFromProps {
   actions: {
-    selectObject: typeof OE.actions.selectObject
+    selectObject: typeof OE.actions.selectObject,
+    addCardToBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
   };
 }
 
 type Props = StateFromProps & DispatchFromProps;
 
-class ObjectMenu extends React.PureComponent<Props> {
+class ObjectMenu extends React.Component<Props> {
   render() {
     const { actions, selection } = this.props;
 
@@ -41,11 +43,13 @@ class ObjectMenu extends React.PureComponent<Props> {
   }
 }
 
-export default connect(
+export default connect<StateFromProps, DispatchFromProps>(
   (state: T.State) => ({ selection: state.selection }),
   (dispatch: T.Dispatch) => ({
     actions: {
-      selectObject: (id: SO.ObjectID | null) => dispatch(T.actions.editor.selectObject(id))
+      selectObject: (id: SO.ObjectID | null) => dispatch(T.actions.editor.selectObject(id)),
+      addCardToBox: (card: SO.ObjectID, box: SB.BoxID) =>
+        dispatch(T.actions.senseObject.addCardToBox(card, box)),
     }
   })
 )(ObjectMenu);

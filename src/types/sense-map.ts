@@ -49,12 +49,9 @@ export type State = {
 export const initial: State = {
   scope: {
     type: MapScopeType.FULL_MAP,
-    // type: MapScopeType.BOX,
-    // box: 'cjgg9ar6x0w660155wi4s2sp7'
   },
 };
 
-// tslint:disable-next-line:no-any
 export const reducer = (state: State = initial, action: Action): State => {
   switch (action.type) {
     case OPEN_BOX: {

@@ -13,8 +13,8 @@ import * as T from '../../types';
 export interface StateFromProps {
   selection: SO.ObjectID[];
   objects: { [key: string]: SO.ObjectData };
-  cards: { [key: string]: SC.CardData };
-  boxes: { [key: string]: SB.BoxData };
+  cards:   { [key: string]: SC.CardData };
+  boxes:   { [key: string]: SB.BoxData };
 }
 
 export interface DispatchFromProps {
@@ -70,14 +70,13 @@ function renderObject(o: SO.ObjectData, props: Props) {
         />);
     }
     default: {
-      throw Error(`Unknown ObjectData ${o.objectType}`);
+      throw Error(`Unknown ObjectData type ${o.objectType}`);
     }
   }
 }
 
 export function Map(props: Props) {
-  const objects = Object.values(props.objects)
-    .map(o => renderObject(o, props));
+  const objects = Object.values(props.objects).map(o => renderObject(o, props));
   return (
     <Stage width={props.width} height={props.height}>
       <Layer>

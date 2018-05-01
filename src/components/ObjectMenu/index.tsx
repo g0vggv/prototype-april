@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Menu } from 'semantic-ui-react';
 import * as T from '../../types';
 import * as SL from '../../types/selection';
+import * as SM from '../../types/sense-map';
 import * as SO from '../../types/sense-object';
 import * as SB from '../../types/sense-box';
 import * as OE from '../../types/object-editor';
@@ -10,12 +11,14 @@ import * as OE from '../../types/object-editor';
 interface StateFromProps {
   selection: SL.State;
   objects: SO.State['objects'];
+  scope: SM.State['scope'];
 }
 
 interface DispatchFromProps {
   actions: {
     selectObject: typeof OE.actions.selectObject,
     addCardToBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
+    removeCardFromBox(card: SO.ObjectID): Promise<T.Action>,
   };
 }
 
@@ -47,17 +50,37 @@ class ObjectMenu extends React.Component<Props> {
     super(props);
     this.canAddCard = this.canAddCard.bind(this);
     this.handleAddCard = this.handleAddCard.bind(this);
+    this.canRemoveCard = this.canRemoveCard.bind(this);
+    this.handleRemoveCard = this.handleRemoveCard.bind(this);
   }
 
   canAddCard(): Boolean {
+    if (this.props.scope.type !== SM.MapScopeType.FULL_MAP) {
+      return false;
+    }
     const { cards, boxes } = selectedCardsAndBoxes(this.props);
     return cards.length === 1 && boxes.length === 1;
   }
 
-  handleAddCard() {
+  handleAddCard(): void {
     const { cards, boxes } = selectedCardsAndBoxes(this.props);
     if (this.canAddCard()) {
-      return this.props.actions.addCardToBox(cards[0], this.props.objects[boxes[0]].data);
+      this.props.actions.addCardToBox(cards[0], this.props.objects[boxes[0]].data);
+      return;
+    }
+    return;
+  }
+
+  canRemoveCard(): Boolean {
+    return this.props.scope.type === SM.MapScopeType.BOX
+      && this.props.selection.length === 1;
+  }
+
+  handleRemoveCard(): void {
+    if (this.props.selection.length === 1) {
+      const card = this.props.selection[0];
+      this.props.actions.removeCardFromBox(card);
+      return;
     }
     return;
   }
@@ -86,6 +109,13 @@ class ObjectMenu extends React.Component<Props> {
         >
           加入
         </Menu.Item>
+        <Menu.Item
+          name="removeCard"
+          disabled={!this.canRemoveCard()}
+          onClick={this.handleRemoveCard}
+        >
+          退出
+        </Menu.Item>
       </Menu>
     );
   }
@@ -94,6 +124,7 @@ class ObjectMenu extends React.Component<Props> {
 export default connect<StateFromProps, DispatchFromProps>(
   (state: T.State) => ({
     selection: state.selection,
+    scope: state.senseMap.scope,
     objects: state.senseObject.objects,
   }),
   (dispatch: T.Dispatch) => ({
@@ -101,6 +132,8 @@ export default connect<StateFromProps, DispatchFromProps>(
       selectObject: (id: SO.ObjectID | null) => dispatch(T.actions.editor.selectObject(id)),
       addCardToBox: (card: SO.ObjectID, box: SB.BoxID) =>
         dispatch(T.actions.senseObject.addCardToBox(card, box)),
+      removeCardFromBox: (card: SO.ObjectID) =>
+        dispatch(T.actions.senseObject.removeCardFromBox(card)),
     }
   })
 )(ObjectMenu);

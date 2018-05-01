@@ -18,7 +18,7 @@ interface DispatchFromProps {
   actions: {
     selectObject: typeof OE.actions.selectObject,
     addCardToBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
-    removeCardFromBox(card: SO.ObjectID): Promise<T.Action>,
+    removeCardFromBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
   };
 }
 
@@ -63,11 +63,11 @@ class ObjectMenu extends React.Component<Props> {
   }
 
   handleAddCard(): void {
-    const { cards, boxes } = selectedCardsAndBoxes(this.props);
-    if (this.canAddCard()) {
-      this.props.actions.addCardToBox(cards[0], this.props.objects[boxes[0]].data);
+    if (!this.canAddCard()) {
       return;
     }
+    const { cards, boxes } = selectedCardsAndBoxes(this.props);
+    this.props.actions.addCardToBox(cards[0], this.props.objects[boxes[0]].data);
     return;
   }
 
@@ -77,11 +77,15 @@ class ObjectMenu extends React.Component<Props> {
   }
 
   handleRemoveCard(): void {
-    if (this.props.selection.length === 1) {
-      const card = this.props.selection[0];
-      this.props.actions.removeCardFromBox(card);
+    if (!this.canRemoveCard()) {
       return;
     }
+    const card = this.props.selection[0];
+    const box  = this.props.scope.box;
+    if (!box) {
+      throw Error('This cannot happen: map scope has type BOX with null box ID.');
+    }
+    this.props.actions.removeCardFromBox(card, box);
     return;
   }
 
@@ -132,8 +136,8 @@ export default connect<StateFromProps, DispatchFromProps>(
       selectObject: (id: SO.ObjectID | null) => dispatch(T.actions.editor.selectObject(id)),
       addCardToBox: (card: SO.ObjectID, box: SB.BoxID) =>
         dispatch(T.actions.senseObject.addCardToBox(card, box)),
-      removeCardFromBox: (card: SO.ObjectID) =>
-        dispatch(T.actions.senseObject.removeCardFromBox(card)),
+      removeCardFromBox: (card: SO.ObjectID, box: SB.BoxID) =>
+        dispatch(T.actions.senseObject.removeCardFromBox(card, box)),
     }
   })
 )(ObjectMenu);

@@ -377,15 +377,12 @@ const addCardToBox =
       ${graphQLObjectFieldsFragment}
     `;
     const variables = { cardObject, box };
-    // FIXME should also updateBoxes to update `contains`
     return client.request(query, variables)
-      .then(({ updateObject }) => dispatch(updateObjects(toIDMap<ObjectData>([
-        toObjectData(updateObject),
-      ]))));
+      .then(({ updateObject }) => dispatch(updateInBox(cardObject, box)));
   };
 
 const removeCardFromBox =
-  (cardObject: ObjectID) =>
+  (cardObject: ObjectID, box: BoxID) =>
   (dispatch: Dispatch) => {
     const query = `
       mutation RemoveCardFromBox($cardObject: ID!) {
@@ -397,9 +394,7 @@ const removeCardFromBox =
     `;
     const variables = { cardObject };
     return client.request(query, variables)
-      .then(({ updateObject }) => dispatch(updateObjects(toIDMap<ObjectData>([
-        toObjectData(updateObject),
-      ]))));
+      .then(({ updateObject }) => dispatch(updateNotInBox(cardObject, box)));
   };
 
 export const syncActions = {

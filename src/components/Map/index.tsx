@@ -27,12 +27,12 @@ export interface DispatchFromProps {
   };
 }
 
-export interface PropsFromParent {
+export interface OwnProps {
   width: number;
   height: number;
 }
 
-export type Props = StateFromProps & DispatchFromProps & PropsFromParent;
+export type Props = StateFromProps & DispatchFromProps & OwnProps;
 
 function renderObject(o: SO.ObjectData, props: Props) {
   const toggleSelection = props.actions.toggleObjectSelection;

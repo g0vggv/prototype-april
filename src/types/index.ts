@@ -36,6 +36,8 @@ export type Action
   | ActionUnion<typeof SL.actions>
   | OE.Action;
 
+export type ThunkedAction = Action | Promise<Action>;
+
 export const actions = {
   counter: C.actions,
   senseMap: SM.actions,

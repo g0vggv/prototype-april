@@ -5,25 +5,24 @@ import MapBox from '../MapBox';
 import MapCard from '../MapCard';
 import { Group } from 'react-konva';
 import * as SO from '../../types/sense-object';
-import * as SC from '../../types/sense-card';
 import * as SB from '../../types/sense-box';
 import * as SL from '../../types/selection';
 import * as T from '../../types';
 
 export interface StateFromProps {
-  selection: SO.ObjectID[];
-  objects: { [key: string]: SO.ObjectData };
-  cards:   { [key: string]: SC.CardData };
-  boxes:   { [key: string]: SB.BoxData };
+  selection: T.State['selection'];
+  objects:   T.State['senseObject']['objects'];
+  cards:     T.State['senseObject']['cards'];
+  boxes:     T.State['senseObject']['boxes'];
 }
 
 export interface DispatchFromProps {
   actions: {
-    toggleObjectSelection(id: SO.ObjectID): T.Action,
-    moveObject(id: SO.ObjectID, x: number, y: number): Promise<T.Action>,
-    addCardToBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
-    removeCardFromBox(card: SO.ObjectID, box: SB.BoxID): Promise<T.Action>,
-    openBox(box: SB.BoxID): T.Action,
+    toggleObjectSelection(id: SO.ObjectID): T.ThunkedAction,
+    moveObject(id: SO.ObjectID, x: number, y: number): T.ThunkedAction,
+    addCardToBox(card: SO.ObjectID, box: SB.BoxID): T.ThunkedAction,
+    removeCardFromBox(card: SO.ObjectID, box: SB.BoxID): T.ThunkedAction,
+    openBox(box: SB.BoxID): T.ThunkedAction,
   };
 }
 
@@ -34,7 +33,7 @@ export interface OwnProps {
 
 export type Props = StateFromProps & DispatchFromProps & OwnProps;
 
-function renderObject(o: SO.ObjectData, props: Props) {
+const renderObject = (o: SO.ObjectData, props: Props) => {
   const toggleSelection = props.actions.toggleObjectSelection;
   const moveObject = props.actions.moveObject;
   const openBox = props.actions.openBox;
@@ -73,7 +72,7 @@ function renderObject(o: SO.ObjectData, props: Props) {
       throw Error(`Unknown ObjectData type ${o.objectType}`);
     }
   }
-}
+};
 
 export function Map(props: Props) {
   const objects = Object.values(props.objects).map(o => renderObject(o, props));

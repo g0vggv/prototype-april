@@ -194,7 +194,7 @@ const toBoxData: (b: GraphQLBoxFields) => BoxData =
   });
 
 /**
- * Partially update `objects` in Redux state.
+ * Partially update `objects` state.
  */
 const UPDATE_OBJECTS = 'UPDATE_OBJECTS';
 const updateObjects =
@@ -204,7 +204,7 @@ const updateObjects =
   });
 
 /**
- * Partially update `cards` in Redux state.
+ * Partially update `cards` state.
  */
 const UPDATE_CARDS = 'UPDATE_CARDS';
 const updateCards =
@@ -214,13 +214,33 @@ const updateCards =
   });
 
 /**
- * Partially update `boxes` in Redux state.
+ * Partially update `boxes` state.
  */
 const UPDATE_BOXES = 'UPDATE_BOXES';
 const updateBoxes =
   (boxes: State['boxes']) => ({
     type: UPDATE_BOXES as typeof UPDATE_BOXES,
     payload: boxes,
+  });
+
+/**
+ * Remove card from Box.contains bidirectional relation.
+ */
+const UPDATE_NOT_IN_BOX = 'UPDATE_NOT_IN_BOX';
+const updateNotInBox =
+  (cardObject: ObjectID, box: BoxID) => ({
+    type: UPDATE_NOT_IN_BOX as typeof UPDATE_NOT_IN_BOX,
+    payload: { cardObject, box }
+  });
+
+/**
+ * Add card to Box.contains bidirectional relation.
+ */
+const UPDATE_IN_BOX = 'UPDATE_IN_BOX';
+const updateInBox =
+  (cardObject: ObjectID, box: BoxID) => ({
+    type: UPDATE_IN_BOX as typeof UPDATE_IN_BOX,
+    payload: { cardObject, box }
   });
 
 const updateRemoteCard =
@@ -385,7 +405,9 @@ const removeCardFromBox =
 export const syncActions = {
   updateObjects,
   updateCards,
-  updateBoxes
+  updateBoxes,
+  updateNotInBox,
+  updateInBox,
 };
 
 export const actions = {
@@ -420,6 +442,42 @@ export const reducer = (state: State = initial, action: Action): State => {
       return {
         ...state,
         boxes: { ...state.boxes, ...action.payload },
+      };
+    }
+    case UPDATE_NOT_IN_BOX: {
+      const box        = state.boxes[action.payload.box];
+      const cardObject = state.objects[action.payload.cardObject];
+      let { contains } = box;
+      delete(contains[cardObject.id]);
+      return {
+        ...state,
+        boxes: {
+          ...state.boxes,
+          [box.id]: { ...box, contains },
+        },
+        objects: {
+          ...state.objects,
+          [cardObject.id]: { ...cardObject, belongsTo: undefined },
+        }
+      };
+    }
+    case UPDATE_IN_BOX: {
+      const box        = state.boxes[action.payload.box];
+      const cardObject = state.objects[action.payload.cardObject];
+      const contains   = {
+        ...box.contains,
+        [cardObject.id]: { id: cardObject.id },
+      };
+      return {
+        ...state,
+        boxes: {
+          ...state.boxes,
+          [box.id]: { ...box, contains },
+        },
+        objects: {
+          ...state.objects,
+          [cardObject.id]: { ...cardObject, belongsTo: box.id },
+        },
       };
     }
     default: {
